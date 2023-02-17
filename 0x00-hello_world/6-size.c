@@ -6,15 +6,16 @@
  */
 int main(void)
 {
-int a;
-char b;
-float c;
-printf("The size of int is: %lu byte(s)\n", (sizeof(a)));
-printf("The size of char is: %lu byte(s)\n", (unsigned long)(sizeof(b)));
-printf("The size of float is: %lu byte(s)\n", (unsigned long)(sizeof(c)));
-char name[] = "ALX School";
-puts("\"My name is Techman");
-putchar(name[0]);
-putchar('\n');
+	int a;
+	long int b;
+	long long int c;
+	char d;
+	float f;
+
+printf("Size of a char: %lu byte(s)\n", (unsigned long)sizeof(d));
+printf("Size of an int: %lu byte(s)\n", (unsigned long)sizeof(a));
+printf("Size of a long int: %lu byte(s)\n", (unsigned long)sizeof(b));
+printf("Size of a long long int: %lu byte(s)\n", (unsigned long)sizeof(c));
+printf("Size of a float: %lu byte(s)\n", (unsigned long)sizeof(f));
 return (0);
 }
