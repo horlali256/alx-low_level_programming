@@ -1,10 +1,4 @@
 #include "main.h"
-#include <fcntl.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <errno.h>
-#define BUFFER_SIZE 1024
 
 /**
  * main - copies content of a file to another file
