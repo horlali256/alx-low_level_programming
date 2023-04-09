@@ -4,7 +4,8 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <errno.h>
-
+#define READ_ERR "Error: Can't read from file %s\n"
+#define WRITE_ERR "Error: Can't write to %s\n"
 #define BUFFER_SIZE 1024
 
 /**
@@ -16,63 +17,35 @@
  */
 int main(int argc, char **argv)
 {
-	int fd_from, fd_to;
-	ssize_t num_bytes_read;
-	char buffer[BUFFER_SIZE];
-	mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH;
+	int from, to, on_close, w, r;
+	char buffer[1024];
 
-	/* Check if number of arguments is correct */
 	if (argc != 3)
+		dprintf(STDERR_FILENO, "Usage: cp file_from file_to\n"), exit(97);
+	to = open(argv[2], O_WRONLY | O_CREAT | O_TRUNC, 0664);
+	if (to == -1)
+		dprintf(STDERR_FILENO, WRITE_ERR, argv[2]), exit(99);
+	from = open(argv[1], O_RDONLY);
+	if (from == -1)
+		dprintf(STDERR_FILENO, READ_ERR, argv[1]), exit(98);
+	while (1)
 	{
-		dprintf(STDERR_FILENO, "Usage: cp file_from file_to\n");
-		exit(97);
-	}
-
-	/* Open file_from for reading */
-	fd_from = open(argv[1], O_RDONLY);
-	if (fd_from == -1)
-	{
-		dprintf(STDERR_FILENO, "Error: Can't read from file %s\n", argv[1]);
-		exit(98);
-	}
-
-	/* Truncate file_to if it already exists, or create it if it doesn't */
-	fd_to = open(argv[2], O_WRONLY | O_CREAT | O_TRUNC, mode);
-	if (fd_to == -1)
-	{
-		dprintf(STDERR_FILENO, "Error: Can't write to %s\n", argv[2]);
-		exit(99);
-	}
-
-	/* Copy the contents of file_from to file_to */
-	while ((num_bytes_read = read(fd_from, buffer, BUFFER_SIZE)) > 0)
-	{
-		if (write(fd_to, buffer, num_bytes_read) != num_bytes_read)
+		r = read(from, buffer, 1024);
+		if (r == -1)
+			dprintf(STDERR_FILENO, READ_ERR, argv[1]), exit(98);
+		if (r > 0)
 		{
-			dprintf(STDERR_FILENO, "Error: Can't write to %s\n", argv[2]);
-			exit(99);
-		}
+			w = write(to, buffer, r);
+			if (w == -1)
+				dprintf(STDERR_FILENO, WRITE_ERR, argv[2]), exit(99);
+		} else
+			break;
 	}
-
-	/* Check for read error */
-	if (num_bytes_read == -1)
-	{
-		dprintf(STDERR_FILENO, "Error: Can't read from file %s\n", argv[1]);
-		exit(98);
-	}
-
-	/* Close the file descriptors */
-	if (close(fd_from) == -1)
-	{
-		dprintf(STDERR_FILENO, "Error: Can't close fd %d\n", fd_from);
-		exit(100);
-	}
-
-	if (close(fd_to) == -1)
-	{
-		dprintf(STDERR_FILENO, "Error: Can't close fd %d\n", fd_to);
-		exit(100);
-	}
-
+	on_close = close(from);
+	if (on_close == -1)
+		dprintf(STDERR_FILENO, "Error: Can't close fd %d\n", from), exit(100);
+	on_close = close(to);
+	if (on_close == -1)
+		dprintf(STDERR_FILENO, "Error: Can't close fd %d\n", to), exit(100);
 	return (0);
 }
